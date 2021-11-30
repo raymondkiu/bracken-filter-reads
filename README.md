@@ -1,5 +1,5 @@
 # bracken-filter-reads
-This script filters low abundant reads from [Bracken](https://github.com/jenniferlu717/Bracken) outputs directly. It will also remove relative abundance (Sample_frac) columns, taxonomy_id and taxonomic_lvl columns.
+This script filters low abundant reads from [Bracken](https://github.com/jenniferlu717/Bracken) outputs directly. It will also remove relative abundance (Sample_frac) columns, taxonomy_id and taxonomic_lvl columns. Written in Bash.
 
 ## Usage
 You will need to specify -n as the lowest threshold for taxa to be removed. E.g. if you set -n 1000, if a specific taxon has less than 1000 reads across all samples, this taxon will be removed.
