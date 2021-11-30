@@ -61,7 +61,9 @@ then
 awk -F "\t" -v FS='\t' -v OFS='\t' 'NR==1{for (i=1;i<=NF;i++)if ($i=="taxonomy_id"){n=i-1;m=NF-(i==NF)}} {for(i=1;i<=NF;i+=1+(i==n))printf "%s%s",$i,i==m?ORS:OFS}' OFS='\t' $FILE |
 awk -F "\t" -v FS='\t' -v OFS='\t'  'NR==1{for (i=1;i<=NF;i++)if ($i=="taxonomy_lvl"){n=i-1;m=NF-(i==NF)}} {for(i=1;i<=NF;i+=1+(i==n))printf "%s%s",$i,i==m?ORS:OFS}' OFS='\t'|
 awk -F "\t"  '{ for (i=3;i<=NF;i+=2) $i="" }1' OFS='\t'|
-awk -F "\t" -v var=$THRESHOLD 'NR==1; NR > 1{for(i=2; i <= NF; i++) if($i >= var) {print; next}}' OFS='\t'> $FILE-filtered
+awk -F "\t" -v var=$THRESHOLD 'NR==1; NR > 1{for(i=2; i <= NF; i++) if($i >= var) {print; next}}' OFS='\t'|
+# remove empty column with sed
+sed 's/\t\+/\t/g;s/^\t//'> $FILE-filtered
 
 else
     if [ -e "$FILE" ]
@@ -69,7 +71,9 @@ else
     awk -F "\t" -v FS='\t' -v OFS='\t' 'NR==1{for (i=1;i<=NF;i++)if ($i=="taxonomy_id"){n=i-1;m=NF-(i==NF)}} {for(i=1;i<=NF;i+=1+(i==n))printf "%s%s",$i,i==m?ORS:OFS}' OFS='\t' $FILE |
 awk -F "\t" -v FS='\t' -v OFS='\t'  'NR==1{for (i=1;i<=NF;i++)if ($i=="taxonomy_lvl"){n=i-1;m=NF-(i==NF)}} {for(i=1;i<=NF;i+=1+(i==n))printf "%s%s",$i,i==m?ORS:OFS}' OFS='\t'|
 awk -F "\t"  '{ for (i=3;i<=NF;i+=2) $i="" }1' OFS='\t'|
-awk -F "\t" -v var=$THRESHOLD 'NR==1; NR > 1{for(i=2; i <= NF; i++) if($i >= var) {print; next}}' OFS='\t'> $OUTPUT
+awk -F "\t" -v var=$THRESHOLD 'NR==1; NR > 1{for(i=2; i <= NF; i++) if($i >= var) {print; next}}' OFS='\t'|
+# remove empty column with sed
+sed 's/\t\+/\t/g;s/^\t//'> $OUTPUT
 
     else 
         echo "$FILE file does not seem to exist. Program will now exit."
