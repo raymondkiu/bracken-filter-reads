@@ -4,10 +4,11 @@ usage () {
   echo ""
   echo "bracken-filter-reads filters low abundant reads from Bracken outputs"
   echo ""
-  echo "Usage example: bracken-filter-reads -n 1000 BRACKEN-OUTPUT"
+  echo "Usage example: bracken-filter-reads -n 1000 -o NEW-OUTPUT BRACKEN-OUTPUT-TABLE"
   echo ""
   echo "Options:"
   echo " -n Lowest threshold for filtering reads (default:1000)"
+  echo " -o New output name (default: OLDFILENAME-filtered)"
   echo " -h Print usage and exit"
   echo " -v Print version and exit"
   echo ""
@@ -20,14 +21,16 @@ version (){
 echo "bracken-filter-reads version 0.1"
 }
 
-
 # default value for threshold
+
 THRESHOLD=1000
+OUTPUT=EMPTY
 
 # Call options
-while getopts 'n:hv' opt;do
+while getopts 'n:o:hv' opt;do
   case $opt in
     n) THRESHOLD=$OPTARG;;
+    o) OUTPUT=$OPTARG;;
     h) usage; exit;;
     v) version; exit;;
     \?) echo "Invalid option: -$OPTARG" >&2; exit 1;;
@@ -51,12 +54,22 @@ fi
 # Here script starts:
 FILE=$1
 
-if [ -e "$FILE" ]
-then
+if [ -e "$FILE" ] && [ "$OUTPUT" == "EMPTY" ]
 
-awk -v var=$THRESHOLD 'NR==1; NR > 1{for(i=2; i <= NF; i++) if($i >= var) {print; next}}' $FILE > $FILE-filtered
+then
+# remove column of taxonomy_id, taxonomy_lvl and _frac (relative abundance we only want reads)
+awk -v OFS='\t' 'NR==1{for (i=1;i<=NF;i++)if ($i=="taxonomy_id"){n=i-1;m=NF-(i==NF)}} {for(i=1;i<=NF;i+=1+(i==n))printf "%s%s",$i,i==m?ORS:OFS}' $FILE |awk -v OFS='\t' 'NR==1{for (i=1;i<=NF;i++)if ($i=="taxonomy_lvl"){n=i-1;m=NF-(i==NF)}} {for(i=1;i<=NF;i+=1+(i==n))printf "%s%s",$i,i==m?ORS:OFS}'|
+awk '{ for (i=3;i<=NF;i+=2) $i="" }1'|
+awk -v var=$THRESHOLD 'NR==1; NR > 1{for(i=2; i <= NF; i++) if($i >= var) {print; next}}' > $FILE-filtered
 
 else
-    echo "$FILE file does not seem to exist. Program will now exit."
-    exit 1
+    if [ -e "$FILE" ]
+    then
+        awk -v OFS='\t' 'NR==1{for (i=1;i<=NF;i++)if ($i=="taxonomy_id"){n=i-1;m=NF-(i==NF)}} {for(i=1;i<=NF;i+=1+(i==n))printf "%s%s",$i,i==m?ORS:OFS}' $FILE |awk -v OFS='\t' 'NR==1{for (i=1;i<=NF;i++)if ($i=="taxonomy_lvl"){n=i-1;m=NF-(i==NF)}} {for(i=1;i<=NF;i+=1+(i==n))printf "%s%s",$i,i==m?ORS:OFS}'|
+awk '{ for (i=3;i<=NF;i+=2) $i="" }1'|
+awk -v var=$THRESHOLD 'NR==1; NR > 1{for(i=2; i <= NF; i++) if($i >= var) {print; next}}' > $OUTPUT
+    else 
+        echo "$FILE file does not seem to exist. Program will now exit."
+        exit 1
+    fi
 fi
